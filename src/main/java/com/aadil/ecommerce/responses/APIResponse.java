@@ -1,0 +1,1 @@
+package com.aadil.ecommerce.responses;import lombok.Data;import lombok.NoArgsConstructor;import org.springframework.http.HttpStatus;import java.time.LocalDateTime;@Data@NoArgsConstructorpublic class APIResponse<T>{    private boolean success;    private String message;    private HttpStatus code;    private T data;    private LocalDateTime timeStamp;}
