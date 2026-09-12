@@ -1,0 +1,1 @@
+package com.aadil.ecommerce.responses;import lombok.AllArgsConstructor;import lombok.Data;@Data@AllArgsConstructorpublic class PaginatedResponse<T> {    private T data;    private int page;    private int size;    private long totalElement;    private int totalPage;    private boolean isLast;}

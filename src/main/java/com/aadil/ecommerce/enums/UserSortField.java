@@ -1,0 +1,1 @@
+package com.aadil.ecommerce.enums;import lombok.Getter;@Getterpublic enum UserSortField {    ID("id"),    NAME("name"),    EMAIL("email");    private final String UserSortField;    UserSortField(String userSortField) {        UserSortField = userSortField;    }}
