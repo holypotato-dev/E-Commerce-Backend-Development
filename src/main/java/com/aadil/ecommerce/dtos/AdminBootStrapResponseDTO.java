@@ -1,0 +1,1 @@
+package com.aadil.ecommerce.dtos;import com.aadil.ecommerce.UserRole;import lombok.AllArgsConstructor;import lombok.Data;import java.time.LocalDateTime;@Data@AllArgsConstructorpublic class AdminBootStrapResponseDTO {    private Long id;    private String name;    private String email;    private UserRole userRole;    private LocalDateTime createdAt;}
