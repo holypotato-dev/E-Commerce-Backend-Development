@@ -1,0 +1,1 @@
+package com.aadil.ecommerce.exceptions;public class UserAlreadyAnAdminException extends RuntimeException {    public UserAlreadyAnAdminException(String message) {        super(message);    }}

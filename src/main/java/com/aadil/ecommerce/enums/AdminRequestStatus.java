@@ -1,0 +1,1 @@
+package com.aadil.ecommerce.enums;import com.aadil.ecommerce.entities.AdminInvitationEntity;import java.util.function.Predicate;public enum AdminRequestStatus  {    ACCEPTED("accepted"),    PENDING("pending"),    REJECTED("rejected");    private final String RequestStatus;    AdminRequestStatus(String requestStatus) {        RequestStatus = requestStatus;    }}

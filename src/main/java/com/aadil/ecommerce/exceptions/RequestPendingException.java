@@ -1,0 +1,1 @@
+package com.aadil.ecommerce.exceptions;public class RequestPendingException extends RuntimeException {    public RequestPendingException(String message) {        super(message);    }}
