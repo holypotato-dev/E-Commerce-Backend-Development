@@ -1,0 +1,1 @@
+package com.aadil.ecommerce.exceptions;public class AlreadyAUserException extends RuntimeException {    public AlreadyAUserException(String message) {        super(message);    }}
