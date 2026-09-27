@@ -1,0 +1,1 @@
+package com.aadil.ecommerce.exceptions;public class InvalidInvitationException extends RuntimeException {  public InvalidInvitationException(String message) {    super(message);  }}
