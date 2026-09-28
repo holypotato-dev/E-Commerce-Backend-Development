@@ -1,1 +1,1 @@
-package com.aadil.ecommerce.repositories;import org.springframework.data.jpa.repository.JpaRepository;import org.springframework.stereotype.Repository;@Repositorypublic interface ProductRepository extends JpaRepository<ProductRepository,Long> {}
+package com.aadil.ecommerce.repositories;import com.aadil.ecommerce.entities.ProductEntity;import org.springframework.data.jpa.repository.JpaRepository;import org.springframework.stereotype.Repository;@Repositorypublic interface ProductRepository extends JpaRepository<ProductEntity,Long> {}
