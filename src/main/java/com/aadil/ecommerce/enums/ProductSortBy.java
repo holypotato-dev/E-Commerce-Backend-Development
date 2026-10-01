@@ -1,0 +1,1 @@
+package com.aadil.ecommerce.enums;import lombok.Getter;@Getterpublic enum ProductSortBy {    PRODUCT_NAME("productName"),    PRICE("price"),    STOCK_QUANTITY("stockQuantity"),    CREATED_AT("createdAt"),    UPDATE_AT("updatedAt");    private final String productSortBy;    ProductSortBy(String productSortBy) {        this.productSortBy = productSortBy;    }}

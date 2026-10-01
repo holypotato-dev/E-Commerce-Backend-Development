@@ -1,0 +1,1 @@
+package com.aadil.ecommerce.enums;import lombok.Getter;@Getterpublic enum SortDirections {    ASC("asc"),    DESC("desc");    private final String FieldDirection;    SortDirections(String fieldDirection) {        FieldDirection = fieldDirection;    }}
