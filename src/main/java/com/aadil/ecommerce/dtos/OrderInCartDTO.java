@@ -1,0 +1,1 @@
+package com.aadil.ecommerce.dtos;import jakarta.validation.Valid;import jakarta.validation.constraints.Size;import lombok.Data;import java.util.ArrayList;import java.util.List;@Datapublic class OrderInCartDTO {    @Valid    @Size(min = 1,max = 10,message = "Ordered items should be between 1 to 10")    private List<OrderRequestDTO> orderItems = new ArrayList<>();}

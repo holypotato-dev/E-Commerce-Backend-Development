@@ -1,0 +1,1 @@
+package com.aadil.ecommerce.enums;import lombok.Getter;@Getterpublic enum OrderStatus {    PENDING("pending"),    CONFIRMED("confirmed"),    SHIPPED("shipped"),    DELIVERED("delivered"),    CANCELLED("cancelled");    private final String orderStatus;    OrderStatus(String orderStatus) {        this.orderStatus = orderStatus;    }}

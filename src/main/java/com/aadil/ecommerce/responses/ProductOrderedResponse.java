@@ -1,0 +1,1 @@
+package com.aadil.ecommerce.responses;import lombok.Data;import java.math.BigDecimal;@Datapublic class ProductOrderedResponse {    private Long productId;    private String productName;    private Integer productQuantity;    private BigDecimal unitPrice;    private BigDecimal itemTotal;}

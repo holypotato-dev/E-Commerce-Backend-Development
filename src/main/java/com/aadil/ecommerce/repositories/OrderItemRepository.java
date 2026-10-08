@@ -1,0 +1,1 @@
+package com.aadil.ecommerce.repositories;import com.aadil.ecommerce.entities.OrderItemEntity;import org.springframework.data.jpa.repository.JpaRepository;public interface OrderItemRepository extends JpaRepository<OrderItemEntity,Long> {}
