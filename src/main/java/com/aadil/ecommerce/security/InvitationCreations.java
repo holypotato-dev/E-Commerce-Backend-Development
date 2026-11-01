@@ -28,5 +28,6 @@ public class InvitationCreations {
         } catch (NoSuchAlgorithmException algorithmException) {
             throw new IllegalStateException("SHA-256 algorithm is not available in the JVM environment", algorithmException);
         }
+        
     }
 }

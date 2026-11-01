@@ -42,8 +42,6 @@ public class UserService {
         }
 
         if (invitation.getExpiresAt().isBefore(LocalDateTime.now())) {
-            invitation.setAdminRequestStatus(AdminRequestStatus.EXPIRED);
-            adminRepository.save(invitation);
             throw new InvitationExpiredException("Invitation has expired");
         }
 
