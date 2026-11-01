@@ -1,1 +1,33 @@
-package com.aadil.ecommerce.dtos;import jakarta.validation.constraints.DecimalMin;import jakarta.validation.constraints.Min;import jakarta.validation.constraints.NotBlank;import jakarta.validation.constraints.NotNull;import lombok.AllArgsConstructor;import lombok.Data;import java.math.BigDecimal;@Data@AllArgsConstructorpublic class ProductRequestDTO {    @NotBlank(message = "ProductName should NOT be BLANK")    private String productName;    @NotBlank(message = "Description should NOT be BLANK")    private String description;    @NotNull(message = "Price should NOT be NULL")    @DecimalMin(value = "0", inclusive = false)    private BigDecimal price;    @Min(value = 0,message = "Stock Quantity's minimum value is 0")    private int stockQuantity;    @NotBlank(message = "Category should NOT be BLANK")    private String category;}
+package com.aadil.ecommerce.dtos;
+
+import jakarta.validation.constraints.DecimalMin;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+import java.math.BigDecimal;
+
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+public class ProductRequestDTO {
+
+    @NotBlank(message = "ProductName should NOT be BLANK")
+    private String productName;
+
+    @NotBlank(message = "Description should NOT be BLANK")
+    private String description;
+
+    @NotNull(message = "Price should NOT be NULL")
+    @DecimalMin(value = "0", inclusive = false, message = "Price must be greater than 0")
+    private BigDecimal price;
+
+    @Min(value = 0, message = "Stock Quantity's minimum value is 0")
+    private int stockQuantity;
+
+    @NotBlank(message = "Category should NOT be BLANK")
+    private String category;
+}

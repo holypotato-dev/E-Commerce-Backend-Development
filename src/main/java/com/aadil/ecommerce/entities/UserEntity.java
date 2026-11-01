@@ -1,1 +1,52 @@
-package com.aadil.ecommerce.entities;import com.aadil.ecommerce.UserRole;import jakarta.persistence.*;import lombok.Data;import lombok.Getter;import lombok.RequiredArgsConstructor;import lombok.Setter;import org.hibernate.annotations.CreationTimestamp;import org.hibernate.annotations.UpdateTimestamp;import java.time.LocalDateTime;import java.util.ArrayList;import java.util.List;@Entity@Table (name = "UserEntity")@Getter@Setter@RequiredArgsConstructorpublic class UserEntity {    @GeneratedValue(strategy = GenerationType.IDENTITY)    @Id    @Column(name = "id")    private Long id;    @Column(nullable = false)    private String name;    @Column(nullable = false,unique = true)    private String email;    @OneToMany(mappedBy = "user")    private List<AdminInvitationEntity> invitations = new ArrayList<>();    @OneToMany(mappedBy = "user")    private List<OrderEntity> orders = new ArrayList<>();    @Column(nullable = false)    private String password;    @Enumerated(value = EnumType.STRING)    @Column(nullable = false)    private UserRole role;    @CreationTimestamp    @Column(nullable = false,updatable = false)    private LocalDateTime createdAt;    @UpdateTimestamp    @Column(nullable = false)    private LocalDateTime updatedAt;}
+package com.aadil.ecommerce.entities;
+
+import com.aadil.ecommerce.enums.UserRole;
+import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
+
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+
+@Entity
+@Table(name = "UserEntity")
+@Getter
+@Setter
+@NoArgsConstructor
+public class UserEntity {
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Id
+    @Column(name = "id")
+    private Long id;
+
+    @Column(nullable = false)
+    private String name;
+
+    @Column(nullable = false, unique = true)
+    private String email;
+
+    @OneToMany(mappedBy = "user")
+    private List<AdminInvitationEntity> invitations = new ArrayList<>();
+
+    @OneToMany(mappedBy = "user")
+    private List<OrderEntity> orders = new ArrayList<>();
+
+    @Column(nullable = false)
+    private String password;
+
+    @Enumerated(value = EnumType.STRING)
+    @Column(nullable = false)
+    private UserRole role;
+
+    @CreationTimestamp
+    @Column(nullable = false, updatable = false)
+    private LocalDateTime createdAt;
+
+    @UpdateTimestamp
+    @Column(nullable = false)
+    private LocalDateTime updatedAt;
+}

@@ -1,1 +1,106 @@
-package com.aadil.ecommerce.controllers;import com.aadil.ecommerce.dtos.ProductRequestDTO;import com.aadil.ecommerce.responses.ProductResponse;import com.aadil.ecommerce.enums.ProductSortBy;import com.aadil.ecommerce.enums.SortDirections;import com.aadil.ecommerce.responses.APIResponse;import com.aadil.ecommerce.responses.PaginatedResponse;import com.aadil.ecommerce.services.ProductService;import jakarta.validation.Valid;import lombok.RequiredArgsConstructor;import org.springframework.http.HttpStatus;import org.springframework.http.ResponseEntity;import org.springframework.web.bind.annotation.*;import java.time.LocalDateTime;import java.util.List;@RestController@RequestMapping("/api/products")@RequiredArgsConstructorpublic class ProductController {    private final ProductService productService;    @PostMapping("/create")    public ResponseEntity<APIResponse<ProductResponse>> createProduct (@RequestBody @Valid ProductRequestDTO dto) {        ProductResponse responseDTO = productService.createProduct(dto);        APIResponse<ProductResponse> apiResponse = new APIResponse<>();        apiResponse.setSuccess(true);        apiResponse.setCode(201);        apiResponse.setMessage("Product has created Successfully");        apiResponse.setData(responseDTO);        apiResponse.setTimeStamp(LocalDateTime.now());        return new ResponseEntity<>(apiResponse, HttpStatus.CREATED);    }    @PostMapping("/bulk")    public ResponseEntity<APIResponse<List<ProductResponse>>> createBulkProducts (@Valid @RequestBody List<ProductRequestDTO> dtos){        List<ProductResponse> productRequestDTOS = productService.createBulkProducts(dtos);        APIResponse<List<ProductResponse>> apiResponse = new APIResponse<>();        apiResponse.setSuccess(true);        apiResponse.setCode(201);        apiResponse.setMessage("Bulk products has created successfully");        apiResponse.setData(productRequestDTOS);        apiResponse.setTimeStamp(LocalDateTime.now());        return new ResponseEntity<>(apiResponse, HttpStatus.CREATED);    }    @GetMapping("/{id}")    public ResponseEntity<APIResponse<ProductResponse>> getProductById (@PathVariable Long id){        ProductResponse responseDTO = productService.getProductById(id);        APIResponse<ProductResponse> apiResponse = new APIResponse<>();        apiResponse.setSuccess(true);        apiResponse.setCode(200);        apiResponse.setMessage("Product has successfully retrieved by ID");        apiResponse.setData(responseDTO);        apiResponse.setTimeStamp(LocalDateTime.now());        return new ResponseEntity<>(apiResponse, HttpStatus.OK);    }    @GetMapping("/all")    public ResponseEntity<APIResponse<PaginatedResponse<List<ProductResponse>>>> getAllProducts (            @RequestParam(required = false) String search,            @RequestParam(defaultValue = "0",name = "Page",required = false) int page,            @RequestParam(defaultValue = "20",name = "Size",required = false) int size,            @RequestParam(defaultValue = "CREATED_AT",name = "Time",required = false) ProductSortBy sort,            @RequestParam(defaultValue = "ASC",name = "OrderBy",required = false) SortDirections sortDirection    )    {        PaginatedResponse<List<ProductResponse>> getAllProducts = productService.getAllProducts(search,page,size,sort,sortDirection);        APIResponse<PaginatedResponse<List<ProductResponse>>> apiResponse = new APIResponse<>();        apiResponse.setSuccess(true);        apiResponse.setCode(200);        apiResponse.setMessage("All Product has retrieved successfully");        apiResponse.setData(getAllProducts);        apiResponse.setTimeStamp(LocalDateTime.now());        return new ResponseEntity<>(apiResponse, HttpStatus.OK);    }    @PutMapping("/{id}")    public ResponseEntity<APIResponse<ProductResponse>> updateProduct (@PathVariable Long id, @Valid@RequestBody ProductRequestDTO dto){        ProductResponse productResponseDTO = productService.updateProduct(id,dto);        APIResponse<ProductResponse> apiResponse = new APIResponse<>();        apiResponse.setSuccess(true);        apiResponse.setCode(200);        apiResponse.setMessage("Product has UPDATED successfully");        apiResponse.setData(productResponseDTO);        apiResponse.setTimeStamp(LocalDateTime.now());        return new ResponseEntity<>(apiResponse, HttpStatus.OK);    }    @DeleteMapping("/{id}")    public ResponseEntity<Void> deleteById (@PathVariable Long id, @RequestParam(defaultValue = "false") boolean confirm){        productService.deleteProductById(id,confirm);       return ResponseEntity.noContent().build();    }}
+package com.aadil.ecommerce.controllers;
+
+import com.aadil.ecommerce.dtos.ProductRequestDTO;
+import com.aadil.ecommerce.responses.ProductResponse;
+import com.aadil.ecommerce.enums.ProductSortBy;
+import com.aadil.ecommerce.enums.SortDirections;
+import com.aadil.ecommerce.responses.APIResponse;
+import com.aadil.ecommerce.responses.PaginatedResponse;
+import com.aadil.ecommerce.services.ProductService;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+
+@RestController
+@RequestMapping("/api/products")
+@RequiredArgsConstructor
+public class ProductController {
+    private final ProductService productService;
+
+    @PostMapping("/create")
+    public ResponseEntity<APIResponse<ProductResponse>> createProduct(@RequestBody @Valid ProductRequestDTO dto) {
+        ProductResponse responseDTO = productService.createProduct(dto);
+
+        APIResponse<ProductResponse> apiResponse = APIResponse.<ProductResponse>builder()
+                .success(true)
+                .code(201)
+                .message("Product has created Successfully")
+                .data(responseDTO)
+                .build();
+
+        return new ResponseEntity<>(apiResponse, HttpStatus.CREATED);
+    }
+
+    @PostMapping("/bulk")
+    public ResponseEntity<APIResponse<List<ProductResponse>>> createBulkProducts(@Valid @RequestBody List<ProductRequestDTO> dtos) {
+        List<ProductResponse> productRequestDTOS = productService.createBulkProducts(dtos);
+
+        APIResponse<List<ProductResponse>> apiResponse = APIResponse.<List<ProductResponse>>builder()
+                .success(true)
+                .code(201)
+                .message("Bulk products has created successfully")
+                .data(productRequestDTOS)
+                .build();
+
+        return new ResponseEntity<>(apiResponse, HttpStatus.CREATED);
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<APIResponse<ProductResponse>> getProductById(@PathVariable Long id) {
+        ProductResponse responseDTO = productService.getProductById(id);
+
+        APIResponse<ProductResponse> apiResponse = APIResponse.<ProductResponse>builder()
+                .success(true)
+                .code(200)
+                .message("Product has successfully retrieved by ID")
+                .data(responseDTO)
+                .build();
+
+        return new ResponseEntity<>(apiResponse, HttpStatus.OK);
+    }
+
+    @GetMapping("/all")
+    public ResponseEntity<APIResponse<PaginatedResponse<List<ProductResponse>>>> getAllProducts(
+            @RequestParam(required = false) String search,
+            @RequestParam(defaultValue = "0", name = "Page", required = false) int page,
+            @RequestParam(defaultValue = "20", name = "Size", required = false) int size,
+            @RequestParam(defaultValue = "CREATED_AT", name = "Time", required = false) ProductSortBy sort,
+            @RequestParam(defaultValue = "ASC", name = "OrderBy", required = false) SortDirections sortDirection
+    ) {
+        PaginatedResponse<List<ProductResponse>> getAllProducts = productService.getAllProducts(search, page, size, sort, sortDirection);
+
+        APIResponse<PaginatedResponse<List<ProductResponse>>> apiResponse =
+                APIResponse.<PaginatedResponse<List<ProductResponse>>>builder()
+                        .success(true)
+                        .code(200)
+                        .message("All Product has retrieved successfully")
+                        .data(getAllProducts)
+                        .build();
+
+        return new ResponseEntity<>(apiResponse, HttpStatus.OK);
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<APIResponse<ProductResponse>> updateProduct (@PathVariable Long id, @Valid @RequestBody ProductRequestDTO dto) {
+        ProductResponse productResponseDTO = productService.updateProduct(id, dto);
+
+        APIResponse<ProductResponse> apiResponse = APIResponse.<ProductResponse>builder()
+                .success(true)
+                .code(200)
+                .message("Product has UPDATED successfully")
+                .data(productResponseDTO)
+                .build();
+
+        return new ResponseEntity<>(apiResponse, HttpStatus.OK);
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteById(@PathVariable Long id, @RequestParam(defaultValue = "false") boolean confirm) {
+        productService.deleteProductById(id, confirm);
+        return ResponseEntity.noContent().build();
+    }
+}
