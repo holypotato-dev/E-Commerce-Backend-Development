@@ -11,30 +11,42 @@ import java.util.List;
 @Component
 public class OrderResponseMapper {
 
-    private ProductOrderedResponse mapToOrderResponse(OrderItemEntity orderItem) {
-        ProductOrderedResponse productOrderedResponse = new ProductOrderedResponse();
-        productOrderedResponse.setProductId(orderItem.getProduct().getProductId());
-        productOrderedResponse.setProductName(orderItem.getProduct().getProductName());
-        productOrderedResponse.setProductQuantity(orderItem.getQuantity());
-        productOrderedResponse.setUnitPrice(orderItem.getUnitPrice());
-        BigDecimal itemTotal = orderItem.getUnitPrice().multiply(BigDecimal.valueOf(orderItem.getQuantity()));
-        productOrderedResponse.setItemTotal(itemTotal);
-        return productOrderedResponse;
+    public OrderItemResponseDTO mapToOrderItemResponseDTO(OrderItemEntity orderItem) {
+        BigDecimal unitPrice = orderItem.getUnitPrice();
+        Integer quantity = orderItem.getQuantity();
+        BigDecimal subtotal = (unitPrice != null && quantity != null)
+                ? unitPrice.multiply(BigDecimal.valueOf(quantity))
+                : BigDecimal.ZERO;
+
+        String productName = (orderItem.getProduct() != null)
+                ? orderItem.getProduct().getProductName()
+                : null;
+
+        Long productId = (orderItem.getProduct() != null)
+                ? orderItem.getProduct().getProductId()
+                : null;
+
+        return OrderItemResponseDTO.builder()
+                .productId(productId)
+                .productName(productName)
+                .quantity(quantity)
+                .unitPrice(unitPrice)
+                .subtotal(subtotal)
+                .build();
     }
 
     public OrderResponse mapToResponse(OrderEntity order) {
-        OrderResponse orderResponse = new OrderResponse();
-        orderResponse.setOrderStatus(order.getOrderStatus());
-        orderResponse.setOrderId(order.getOrderId());
-        orderResponse.setCreatedAt(order.getCreatedAt());
-        orderResponse.setUpdatedAt(order.getUpdatedAt());
-        orderResponse.setTotalAmount(order.getTotalAmount());
-
-        List<ProductOrderedResponse> orderedItems = (order.getOrderItems() != null)
-                ? order.getOrderItems().stream().map(this::mapToOrderResponse).toList()
+        List<OrderItemResponseDTO> orderedItems = (order.getOrderItems() != null)
+                ? order.getOrderItems().stream().map(this::mapToOrderItemResponseDTO).toList()
                 : Collections.emptyList();
 
-        orderResponse.setOrderedItems(orderedItems);
-        return orderResponse;
+        return OrderResponse.builder()
+                .orderId(order.getOrderId())
+                .orderStatus(order.getOrderStatus())
+                .totalAmount(order.getTotalAmount())
+                .createdAt(order.getCreatedAt())
+                .updatedAt(order.getUpdatedAt())
+                .orderedItems(orderedItems)
+                .build();
     }
 }
