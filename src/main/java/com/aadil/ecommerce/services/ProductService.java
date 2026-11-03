@@ -50,7 +50,7 @@ public class ProductService {
     }
 
     @Transactional
-    public ProductResponse createProduct(ProductRequestDTO dto) {
+    public ProductResponse createProduct (ProductRequestDTO dto) {
         ProductEntity product = mapToProductTable(dto);
         ProductEntity savedProduct = productRepository.save(product);
         return mapToProductDTO(savedProduct);

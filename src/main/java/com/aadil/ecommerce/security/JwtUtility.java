@@ -59,10 +59,6 @@ public class JwtUtility {
         return extractAllClaims(token).getSubject();
     }
 
-    /**
-     * Single-pass token verification:
-     * Parses and cryptographically verifies HMAC SHA-256 only once per request.
-     */
     public boolean isTokenValid(String token, UserDetails userDetails) {
         try {
             Claims claims = extractAllClaims(token);

@@ -36,6 +36,7 @@ import java.math.BigDecimal;
 import java.util.*;
 import java.util.stream.Collectors;
 
+
 @Service
 @RequiredArgsConstructor
 public class OrderService {
@@ -45,10 +46,21 @@ public class OrderService {
     private final OrderRepository orderRepository;
     private final OrderResponseMapper orderResponseMapper;
 
-    /**
-     * Resolves authenticated user and strictly verifies that their role matches the expected role.
-     * Prevents cross-role access (User accessing Admin endpoints, or Admin accessing User endpoints).
-     */
+
+    private boolean isValidOrderStatusTransition(OrderStatus currentStatus, OrderStatus newStatus) {
+        if (currentStatus == null || newStatus == null || currentStatus == newStatus) {
+            return false;
+        }
+
+        return switch (currentStatus) {
+            case PENDING -> newStatus == OrderStatus.CONFIRMED || newStatus == OrderStatus.CANCELLED;
+            case CONFIRMED -> newStatus == OrderStatus.SHIPPED || newStatus == OrderStatus.CANCELLED;
+            case SHIPPED -> newStatus == OrderStatus.DELIVERED;
+            case CANCELLED, DELIVERED -> false;
+        };
+    }
+
+
     private UserEntity getAuthenticatedUserWithRole(UserRole expectedRole) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null || !authentication.isAuthenticated()) {
@@ -72,14 +84,6 @@ public class OrderService {
         return user;
     }
 
-    // =========================================================================
-    // USER ENDPOINT SERVICE METHODS (Restricted to USER role)
-    // =========================================================================
-
-    /**
-     * Places a new order from cart items.
-     * Strictly restricted to USER role.
-     */
     @Transactional
     public OrderResponse createOrder(OrderInCartDTO dto) {
         if (dto == null) {
@@ -108,7 +112,6 @@ public class OrderService {
             }
         }
 
-        // 1. Consolidate duplicate items in cart
         Map<Long, Integer> productQuantities = dto.getOrderItems().stream()
                 .collect(Collectors.toMap(
                         OrderRequestDTO::getProductId,
@@ -169,12 +172,8 @@ public class OrderService {
         return orderResponseMapper.mapToResponse(savedOrder);
     }
 
-    /**
-     * Retrieves paginated order history for the authenticated customer.
-     * Strictly restricted to USER role.
-     */
     @Transactional(readOnly = true)
-    public PaginatedResponse<List<OrderResponse>> getOrderHistory(int page, int size, SortDirections sortDirection) {
+    public PaginatedResponse<List<OrderResponse>> getOrderHistory (int page, int size, SortDirections sortDirection) {
         if (page < 0) {
             throw new InvalidRequestException("Page index cannot be negative");
         }
@@ -185,7 +184,6 @@ public class OrderService {
             throw new InvalidRequestException("Page size cannot exceed 50");
         }
 
-        // Strict Role Check: Customers only
         UserEntity user = getAuthenticatedUserWithRole(UserRole.USER);
 
         Sort.Direction direction = (sortDirection == SortDirections.ASC)
@@ -210,23 +208,18 @@ public class OrderService {
         );
     }
 
-    /**
-     * Retrieves a single order details by ID for the customer.
-     * Strictly restricted to USER role and verifies ownership.
-     */
     @Transactional(readOnly = true)
     public OrderResponse getOrderById(Long orderId) {
         if (orderId == null || orderId <= 0) {
             throw new InvalidRequestException("Order ID must be a positive non-null number");
         }
-
-        // Strict Role Check: Customers only
+        
         UserEntity user = getAuthenticatedUserWithRole(UserRole.USER);
 
         OrderEntity order = orderRepository.findByIdWithItems(orderId)
                 .orElseThrow(() -> new ResourceNotFoundException("Order not found with ID: " + orderId));
 
-        // Strict Ownership Check: Cannot view another customer's order
+        
         if (!order.getUser().getId().equals(user.getId())) {
             throw new AccessDeniedException("Access Denied: You are not authorized to view another user's order");
         }
@@ -234,23 +227,19 @@ public class OrderService {
         return orderResponseMapper.mapToResponse(order);
     }
 
-    /**
-     * Cancels an order and restores product stock.
-     * Strictly restricted to USER role and verifies ownership.
-     */
+    
     @Transactional
     public OrderResponse cancelOrder(Long orderId) {
         if (orderId == null || orderId <= 0) {
             throw new InvalidRequestException("Order ID must be a positive non-null number");
         }
 
-        // Strict Role Check: Customers only
         UserEntity user = getAuthenticatedUserWithRole(UserRole.USER);
 
-        OrderEntity order = orderRepository.findByIdWithItems(orderId)
+        // Acquire pessimistic write lock so customer cancellation cannot race with concurrent admin operations
+        OrderEntity order = orderRepository.findByIdWithPessimisticLock(orderId)
                 .orElseThrow(() -> new ResourceNotFoundException("Order not found with ID: " + orderId));
 
-        // Strict Ownership Check: Cannot cancel another customer's order
         if (!order.getUser().getId().equals(user.getId())) {
             throw new AccessDeniedException("Access Denied: You are not authorized to cancel another user's order");
         }
@@ -259,13 +248,28 @@ public class OrderService {
             throw new InvalidRequestException("Only PENDING orders can be cancelled. Current status is: " + order.getOrderStatus());
         }
 
-        // Restore product inventory stock
+        // Safely lock and restore product stock
+        Map<Long, Integer> productQuantitiesToRestore = new HashMap<>();
         for (OrderItemEntity item : order.getOrderItems()) {
-            ProductEntity product = item.getProduct();
-            if (product != null) {
-                product.setStockQuantity(product.getStockQuantity() + item.getQuantity());
-                productRepository.save(product);
+            if (item.getProduct() != null && item.getQuantity() != null && item.getQuantity() > 0) {
+                productQuantitiesToRestore.merge(
+                        item.getProduct().getProductId(),
+                        item.getQuantity(),
+                        Integer::sum
+                );
             }
+        }
+
+        if (!productQuantitiesToRestore.isEmpty()) {
+            List<Long> productIds = new ArrayList<>(productQuantitiesToRestore.keySet());
+            Collections.sort(productIds);
+
+            List<ProductEntity> lockedProducts = productRepository.findAllByIdWithPessimisticLock(productIds);
+            for (ProductEntity product : lockedProducts) {
+                int qtyToRestore = productQuantitiesToRestore.getOrDefault(product.getProductId(), 0);
+                product.setStockQuantity(product.getStockQuantity() + qtyToRestore);
+            }
+            productRepository.saveAll(lockedProducts);
         }
 
         order.setOrderStatus(OrderStatus.CANCELLED);
@@ -274,14 +278,6 @@ public class OrderService {
         return orderResponseMapper.mapToResponse(updatedOrder);
     }
 
-    // =========================================================================
-    // ADMIN ENDPOINT SERVICE METHODS (Restricted to ADMIN role)
-    // =========================================================================
-
-    /**
-     * Admin: Retrieves paginated orders across all users with optional status filter.
-     * Strictly restricted to ADMIN role.
-     */
     @Transactional(readOnly = true)
     public PaginatedResponse<List<OrderResponse>> getAllOrdersForAdmin(
             OrderStatus status, int page, int size, SortDirections sortDirection) {
@@ -295,7 +291,6 @@ public class OrderService {
             throw new InvalidRequestException("Page size cannot exceed 100");
         }
 
-        // Strict Role Check: Admins only
         getAuthenticatedUserWithRole(UserRole.ADMIN);
 
         Sort.Direction direction = (sortDirection == SortDirections.ASC)
@@ -322,17 +317,12 @@ public class OrderService {
         );
     }
 
-    /**
-     * Admin: Retrieves any order details by ID.
-     * Strictly restricted to ADMIN role.
-     */
     @Transactional(readOnly = true)
     public OrderResponse getOrderByIdForAdmin(Long orderId) {
         if (orderId == null || orderId <= 0) {
             throw new InvalidRequestException("Order ID must be a positive non-null number");
         }
 
-        // Strict Role Check: Admins only
         getAuthenticatedUserWithRole(UserRole.ADMIN);
 
         OrderEntity order = orderRepository.findByIdWithItems(orderId)
@@ -341,10 +331,6 @@ public class OrderService {
         return orderResponseMapper.mapToResponse(order);
     }
 
-    /**
-     * Admin: Updates order status (e.g., CONFIRMED, SHIPPED, DELIVERED, CANCELLED).
-     * Strictly restricted to ADMIN role.
-     */
     @Transactional
     public OrderResponse updateOrderStatusByAdmin(Long orderId, OrderStatus newStatus) {
         if (orderId == null || orderId <= 0) {
@@ -354,23 +340,55 @@ public class OrderService {
             throw new InvalidRequestException("New order status cannot be null");
         }
 
-        // Strict Role Check: Admins only
         getAuthenticatedUserWithRole(UserRole.ADMIN);
 
-        OrderEntity order = orderRepository.findByIdWithItems(orderId)
+        OrderEntity order = orderRepository.findByIdWithPessimisticLock(orderId)
                 .orElseThrow(() -> new ResourceNotFoundException("Order not found with ID: " + orderId));
 
-        // If transitioning to CANCELLED, restore product inventory
-        if (newStatus == OrderStatus.CANCELLED && order.getOrderStatus() != OrderStatus.CANCELLED) {
+        OrderStatus currentStatus = order.getOrderStatus();
+
+        // 2. Guard against accessing or altering terminal orders (CANCELLED or DELIVERED)
+        if (currentStatus == OrderStatus.CANCELLED || currentStatus == OrderStatus.DELIVERED) {
+            throw new InvalidRequestException(String.format(
+                    "Order %d is already in terminal state '%s'. It cannot be modified and stock cannot be accessed.",
+                    orderId, currentStatus));
+        }
+
+        // 3. Validate state machine transition
+        if (!isValidOrderStatusTransition(currentStatus, newStatus)) {
+            throw new InvalidRequestException(String.format(
+                    "Invalid order status transition from '%s' to '%s'.",
+                    currentStatus, newStatus));
+        }
+
+
+        if (newStatus == OrderStatus.CANCELLED) {
+            Map<Long, Integer> productQuantitiesToRestore = new HashMap<>();
             for (OrderItemEntity item : order.getOrderItems()) {
-                ProductEntity product = item.getProduct();
-                if (product != null) {
-                    product.setStockQuantity(product.getStockQuantity() + item.getQuantity());
-                    productRepository.save(product);
+                if (item.getProduct() != null && item.getQuantity() != null && item.getQuantity() > 0) {
+                    productQuantitiesToRestore.merge(
+                            item.getProduct().getProductId(),
+                            item.getQuantity(),
+                            Integer::sum
+                    );
                 }
+            }
+
+            if (!productQuantitiesToRestore.isEmpty()) {
+                List<Long> productIds = new ArrayList<>(productQuantitiesToRestore.keySet());
+                Collections.sort(productIds);
+
+                // Pessimistic write lock on products in sorted order to prevent deadlocks and race conditions
+                List<ProductEntity> lockedProducts = productRepository.findAllByIdWithPessimisticLock(productIds);
+                for (ProductEntity product : lockedProducts) {
+                    int qtyToRestore = productQuantitiesToRestore.getOrDefault(product.getProductId(), 0);
+                    product.setStockQuantity(product.getStockQuantity() + qtyToRestore);
+                }
+                productRepository.saveAll(lockedProducts);
             }
         }
 
+        // 5. Update status and save
         order.setOrderStatus(newStatus);
         OrderEntity updatedOrder = orderRepository.save(order);
 
