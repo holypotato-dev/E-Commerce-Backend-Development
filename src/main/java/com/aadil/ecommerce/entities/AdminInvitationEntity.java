@@ -34,11 +34,6 @@ public class AdminInvitationEntity {
     @Column(nullable = false)
     private LocalDateTime expiresAt;
 
-    @Column(nullable = false)
-    private LocalDateTime createdAt;
-
-    @PrePersist
-    protected void onCreate() {
-        this.createdAt = LocalDateTime.now();
-    }
+  @CreateTimeStamp (nullable = false)
+  private LocalDateTime createdAt;
 }

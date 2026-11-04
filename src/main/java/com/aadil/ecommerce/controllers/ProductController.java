@@ -21,7 +21,7 @@ import java.util.List;
 public class ProductController {
     private final ProductService productService;
 
-    @PostMapping("/create")
+    @PostMapping({"", "/", "/create"})
     public ResponseEntity<APIResponse<ProductResponse>> createProduct(@RequestBody @Valid ProductRequestDTO dto) {
         ProductResponse responseDTO = productService.createProduct(dto);
 
@@ -63,7 +63,7 @@ public class ProductController {
         return new ResponseEntity<>(apiResponse, HttpStatus.OK);
     }
 
-    @GetMapping("/all")
+    @GetMapping({"", "/", "/all"})
     public ResponseEntity<APIResponse<PaginatedResponse<List<ProductResponse>>>> getAllProducts(
             @RequestParam(required = false) String search,
             @RequestParam(defaultValue = "0", name = "Page", required = false) int page,

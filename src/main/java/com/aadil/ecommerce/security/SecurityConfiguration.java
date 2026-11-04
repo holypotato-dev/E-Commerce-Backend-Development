@@ -40,18 +40,18 @@ public class SecurityConfiguration {
                         .requestMatchers("/api/bootstrap/admin").permitAll()
 
                         // Admin-only endpoints (Strictly accessible by ADMIN role)
-                        .requestMatchers("/api/admin/**").hasRole("ADMIN")
-                        .requestMatchers("/api/orders/admin/**").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.POST, "/api/products/**").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.PUT, "/api/products/**").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.DELETE, "/api/products/**").hasRole("ADMIN")
+                        .requestMatchers("/api/admin", "/api/admin/**").hasRole("ADMIN")
+                        .requestMatchers("/api/orders/admin", "/api/orders/admin/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.POST, "/api/products", "/api/products/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PUT, "/api/products", "/api/products/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/api/products", "/api/products/**").hasRole("ADMIN")
 
                         // User-only endpoints (Strictly accessible by USER role)
-                        .requestMatchers("/api/orders/**").hasRole("USER")
-                        .requestMatchers("/api/users/**").hasRole("USER")
+                        .requestMatchers("/api/orders", "/api/orders/**").hasRole("USER")
+                        .requestMatchers("/api/users", "/api/users/**").hasRole("USER")
 
-                        // Shared read access
-                        .requestMatchers(HttpMethod.GET, "/api/products/**").hasAnyRole("ADMIN", "USER")
+                        // Shared read access (Both ADMIN and USER can read products)
+                        .requestMatchers(HttpMethod.GET, "/api/products", "/api/products/**").hasAnyRole("ADMIN", "USER")
 
                         .anyRequest().authenticated())
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);

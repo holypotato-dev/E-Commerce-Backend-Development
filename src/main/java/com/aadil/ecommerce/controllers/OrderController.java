@@ -33,7 +33,7 @@ public class OrderController {
      * Accessible by: USER
      * Returns: 201 CREATED
      */
-    @PostMapping("/create")
+    @PostMapping({"", "/", "/create"})
     public ResponseEntity<APIResponse<OrderResponse>> createOrder(@Valid @RequestBody OrderInCartDTO dto) {
         OrderResponse orderResponse = orderService.createOrder(dto);
 
@@ -52,7 +52,7 @@ public class OrderController {
      * Accessible by: USER
      * Returns: 200 OK
      */
-    @GetMapping("/history")
+    @GetMapping({"", "/", "/history"})
     public ResponseEntity<APIResponse<PaginatedResponse<List<OrderResponse>>>> getOrderHistory(
             @RequestParam(defaultValue = "0", name = "page", required = false) int page,
             @RequestParam(defaultValue = "10", name = "size", required = false) int size,
