@@ -37,7 +37,6 @@ public class SecurityConfiguration {
                 .authorizeHttpRequests(auth -> auth
                         // Public endpoints
                         .requestMatchers("/api/auth/**").permitAll()
-                        .requestMatchers("/api/bootstrap/admin").permitAll()
 
                         // Admin-only endpoints (Strictly accessible by ADMIN role)
                         .requestMatchers("/api/admin", "/api/admin/**").hasRole("ADMIN")

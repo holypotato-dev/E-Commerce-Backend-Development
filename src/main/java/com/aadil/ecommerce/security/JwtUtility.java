@@ -18,6 +18,7 @@ import java.util.Map;
 
 @Component
 public class JwtUtility {
+    
 
     /**
      * Extended default expiration duration: 7 days in milliseconds (604,800,000 ms).

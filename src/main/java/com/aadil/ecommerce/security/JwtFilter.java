@@ -35,8 +35,8 @@ public class JwtFilter extends OncePerRequestFilter {
 
         String requestPath = request.getServletPath();
 
-        // Skip JWT parsing for public authentication and bootstrap endpoints
-        if (requestPath != null && (requestPath.startsWith("/api/auth") || requestPath.startsWith("/api/bootstrap/admin"))) {
+        // Skip JWT parsing for public authentication endpoints
+        if (requestPath != null && requestPath.startsWith("/api/auth")) {
             filterChain.doFilter(request, response);
             return;
         }
